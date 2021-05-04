@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <p>
+    <font face="tahoma" size="3" color="maroon">
+      <b> This object is a Kunai Knife</b></font
+    >
+  </p>
+
+  <script id="vertex-shader" type="x-shader/x-vertex">
+
+    attribute vec4 vPosition;
+    attribute vec3 vNormal;
+    attribute vec2 vTexCoords;//kord almak için
+
+    varying vec3 N;
+    varying vec3 v;
+
+    varying vec2 fTexCoords;//kord fragmenta göndermek için
+
+    uniform mat4 modelViewMatrix;
+    uniform mat4 projectionMatrix;
+
+    void main()
+    {
+    	fTexCoords =5.2*vTexCoords; //scaling texture coordinates
+
+    	v= vec3(modelViewMatrix*vPosition);
+
+    	vec4 NN = vec4(vNormal,0);//normal vector
+    	N = normalize((modelViewMatrix*NN).xyz); //transform vertex normal
+
+    	gl_Position = projectionMatrix*modelViewMatrix*vPosition;
+
+    }
+  </script>
+
+  <script id="fragment-shader" type="x-shader/x-fragment">
+
+    precision mediump float;
+
+    varying vec3 N;
+    varying vec3 v;
+
+    varying vec2 fTexCoords;
+    uniform sampler2D texMap;//sampler doku nesnesini tutuyor ve ona erişimi sağlıyor
+
+    uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+    uniform vec4 lightDirection;
+    uniform float shininess;
+
+    void main()
+    {
+    //fixed light
+    	vec3 L = normalize(-lightDirection.xyz); //direction to light source
+    	vec3 V = normalize(-v);			//direction to viewer
+    	vec3 H = normalize(-reflect(L,N)); //halfway vector
+
+    	//Compute terms in the illumination equation
+    	vec4 ambient = ambientProduct;
+
+    	float dotLN= dot(L,N);
+    	float diffuseCosAngle = max(dotLN, 0.0);
+    	vec4 diffuse = diffuseCosAngle*diffuseProduct;
+
+    	float specularCosAngle = pow(max(dot(H,V),0.0),shininess);
+    	vec4 specular = specularCosAngle*specularProduct;
+
+
+        gl_FragColor = (ambient+diffuse+specular)*texture2D(texMap, fTexCoords);
+    }
+  </script>
+
+  <script type="text/javascript" src="webgl-utils.js"></script>
+  <script type="text/javascript" src="initShaders.js"></script>
+  <script type="text/javascript" src="MV.js"></script>
+  <script type="text/javascript" src="kunai.js"></script>
+
+  <body>
+    <canvas id="gl-canvas" width="480" height="480">
+      Oops ... your browser doesn't support the HTML5 canvas element
+    </canvas>
+    <p>Please use ↓ key to see wireframe form and ↑ key to see shaded form</p>
+    <p>
+      <button id="XButton">Rotate around X</button>
+      <button id="YButton">Rotate around Y</button>
+      <button id="ZButton">Rotate around Z</button>
+    </p>
+  </body>
+</html>
